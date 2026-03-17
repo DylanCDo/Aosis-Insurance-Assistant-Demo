@@ -24,19 +24,22 @@ See [docs/system-design.md](docs/system-design.md) for architecture, runtime flo
 
 ## Transcript Logging (Optional)
 
-This app supports server-side chat transcript logging using Vercel Postgres.
+This app supports server-side chat transcript logging using Neon/Postgres.
 
-1. Provision a Postgres database (for example Vercel Postgres).
+See [docs/chat-transcription.md](docs/chat-transcription.md) for full flow, schema details, verification SQL, and troubleshooting.
+
+1. Provision a Postgres database (for example Neon on Vercel).
 2. Ensure Postgres environment variables are available to the app runtime.
-3. Run SQL in [db/schema.sql](db/schema.sql) to create transcript tables.
-4. Install dependencies and run the app:
+3. Install dependencies and run the app:
 
 ```bash
 npm install
 npm run dev
 ```
 
-If Postgres env vars are not configured, transcript logging is automatically skipped and chat still works.
+Transcript tables are auto-created on first transcript write. If Postgres env vars are not configured, transcript logging is skipped and chat still works.
+
+Optional: You can still manually run [db/schema.sql](db/schema.sql) in Neon for explicit schema management.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
