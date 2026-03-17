@@ -10,23 +10,100 @@ type ChatMessage = {
   content: string;
 };
 
+type PageLanguage = "en" | "es" | "vi";
+
+const localizedInitialGreeting: Record<PageLanguage, string> = {
+  en: "Hi, I'm the Aosis Smart Assistant! I'm here to help you find the right dental coverage. Ask me about our Cigna DHMO plans, pricing, and what's covered.",
+  es: "Hola, soy the Aosis Smart Assistant. Estoy aqui para ayudarte a encontrar la cobertura dental adecuada. Puedes preguntarme sobre planes Cigna DHMO, precios y cobertura.",
+  vi: "Xin chao, toi la the Aosis Smart Assistant. Toi se giup ban tim bao hiem nha khoa phu hop. Ban co the hoi ve goi Cigna DHMO, chi phi va quyen loi.",
+};
+
+const localizedUiText: Record<
+  PageLanguage,
+  {
+    subtitle: string;
+    languageLabel: string;
+    languageEnglish: string;
+    languageSpanish: string;
+    languageVietnamese: string;
+    typing: string;
+    placeholder: string;
+    send: string;
+  }
+> = {
+  en: {
+    subtitle: "Ask about dental plan options, coverage, pricing, or enroll now.",
+    languageLabel: "Language",
+    languageEnglish: "English",
+    languageSpanish: "Spanish",
+    languageVietnamese: "Vietnamese",
+    typing: "Aosis Smart Assistant is typing...",
+    placeholder: "Type your message...",
+    send: "Send",
+  },
+  es: {
+    subtitle:
+      "Pregunta sobre opciones de planes dentales, cobertura, precios o inscripción.",
+    languageLabel: "Idioma",
+    languageEnglish: "Ingles",
+    languageSpanish: "Espanol",
+    languageVietnamese: "Vietnamita",
+    typing: "Aosis Smart Assistant esta escribiendo...",
+    placeholder: "Escribe tu mensaje...",
+    send: "Enviar",
+  },
+  vi: {
+    subtitle:
+      "Hoi ve cac goi bao hiem nha khoa, quyen loi, chi phi hoac dang ky ngay.",
+    languageLabel: "Ngon ngu",
+    languageEnglish: "Tieng Anh",
+    languageSpanish: "Tieng Tay Ban Nha",
+    languageVietnamese: "Tieng Viet",
+    typing: "Aosis Smart Assistant dang tra loi...",
+    placeholder: "Nhap tin nhan...",
+    send: "Gui",
+  },
+};
+
 export default function Home() {
   const [threadId, setThreadId] = useState<string | undefined>(undefined);
   const [isDark, setIsDark] = useState(false);
+  const [language, setLanguage] = useState<PageLanguage>("en");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
-      content:
-        "Hi, I'm the Aosis Smart Assistant! I'm here to help you find the right dental coverage. Ask me about our Cigna DHMO plans, pricing, and what's covered.",
+      content: localizedInitialGreeting.en,
     },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const endOfMessagesRef = useRef<HTMLDivElement | null>(null);
+  const text = localizedUiText[language];
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length === 0) return prev;
+
+      const first = prev[0];
+      if (first.role !== "assistant") return prev;
+
+      const isInitialGreeting = Object.values(localizedInitialGreeting).includes(
+        first.content
+      );
+      if (!isInitialGreeting) return prev;
+
+      const next = [...prev];
+      next[0] = {
+        ...first,
+        content: localizedInitialGreeting[language],
+      };
+      return next;
+    });
+  }, [language]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -101,25 +178,45 @@ export default function Home() {
                     isDark ? "text-slate-300" : "text-slate-600"
                   }`}
                 >
-                  Ask about dental plan options, coverage, pricing, or enroll now.
+                  {text.subtitle}
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsDark((prev) => !prev)}
-              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-              className={`rounded-xl border px-3 py-2 text-xs font-medium transition sm:text-sm ${
-                isDark
-                  ? "border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700"
-                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-              }`}
-            >
-              <span aria-hidden="true" className="text-base leading-none">
-                {isDark ? "☀" : "☾"}
-              </span>
-            </button>
+            <div className="flex items-center gap-2">
+              <label htmlFor="page-language" className="sr-only">
+                {text.languageLabel}
+              </label>
+              <select
+                id="page-language"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as PageLanguage)}
+                className={`rounded-xl border px-2 py-2 text-xs outline-none sm:text-sm ${
+                  isDark
+                    ? "border-slate-600 bg-slate-800 text-slate-100"
+                    : "border-slate-300 bg-white text-slate-700"
+                }`}
+              >
+                <option value="en">{text.languageEnglish}</option>
+                <option value="es">{text.languageSpanish}</option>
+                <option value="vi">{text.languageVietnamese}</option>
+              </select>
+
+              <button
+                type="button"
+                onClick={() => setIsDark((prev) => !prev)}
+                aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                className={`rounded-xl border px-3 py-2 text-xs font-medium transition sm:text-sm ${
+                  isDark
+                    ? "border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                <span aria-hidden="true" className="text-base leading-none">
+                  {isDark ? "☀" : "☾"}
+                </span>
+              </button>
+            </div>
           </div>
         </header>
 
@@ -161,7 +258,7 @@ export default function Home() {
                     : "border-slate-200 bg-white text-slate-500"
                 }`}
               >
-                Aosis Smart Assistant is typing...
+                {text.typing}
               </div>
             </div>
           ) : null}
@@ -182,7 +279,7 @@ export default function Home() {
               id="user-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
+              placeholder={text.placeholder}
               rows={2}
               className={`w-full resize-none rounded-2xl border px-4 py-3 text-sm outline-none transition ${
                 isDark
@@ -199,7 +296,7 @@ export default function Home() {
                   : "bg-slate-900 text-white hover:bg-slate-700"
               }`}
             >
-              Send
+              {text.send}
             </button>
           </div>
         </form>
