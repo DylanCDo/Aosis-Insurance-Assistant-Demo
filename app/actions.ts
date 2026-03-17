@@ -2,8 +2,10 @@
 
 import OpenAI from "openai";
 import { buildSalesSystemPrompt } from "./company-context";
+import { logTranscriptMessage } from "../lib/transcript-store";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const MODEL_NAME = "gpt-4o";
 
 export async function getAIResponse(
   input: string,
@@ -32,6 +34,14 @@ export async function getAIResponse(
     content: input,
   });
 
+  await logTranscriptMessage({
+    threadId: thread.id,
+    role: "user",
+    content: input,
+  });
+
+  const startTime = Date.now();
+
   const run = await client.beta.threads.runs.createAndPoll(thread.id, {
     assistant_id: assistantId,
     // Inject company persona, guardrails and enrollment CTA on every run
@@ -39,8 +49,18 @@ export async function getAIResponse(
   });
 
   if (run.status !== "completed") {
+    const fallback = "Sorry, I couldn't generate a response.";
+    await logTranscriptMessage({
+      threadId: thread.id,
+      role: "error",
+      content: fallback,
+      model: MODEL_NAME,
+      latencyMs: Date.now() - startTime,
+      error: `run_status_${run.status}`,
+    });
+
     return {
-      content: "Sorry, I couldn't generate a response.",
+      content: fallback,
       threadId: thread.id,
     };
   }
@@ -60,8 +80,18 @@ export async function getAIResponse(
     .map((block) => block.text.value.replace(/【[^】]+】/g, "").trim())
     .join("\n");
 
+  const finalContent = content || "Sorry, I couldn't generate a response.";
+
+  await logTranscriptMessage({
+    threadId: thread.id,
+    role: "assistant",
+    content: finalContent,
+    model: MODEL_NAME,
+    latencyMs: Date.now() - startTime,
+  });
+
   return {
-    content: content || "Sorry, I couldn't generate a response.",
+    content: finalContent,
     threadId: thread.id,
   };
 }

@@ -22,6 +22,22 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 See [docs/system-design.md](docs/system-design.md) for architecture, runtime flow, OpenAI integration, and operational setup.
 
+## Transcript Logging (Optional)
+
+This app supports server-side chat transcript logging using Vercel Postgres.
+
+1. Provision a Postgres database (for example Vercel Postgres).
+2. Ensure Postgres environment variables are available to the app runtime.
+3. Run SQL in [db/schema.sql](db/schema.sql) to create transcript tables.
+4. Install dependencies and run the app:
+
+```bash
+npm install
+npm run dev
+```
+
+If Postgres env vars are not configured, transcript logging is automatically skipped and chat still works.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
