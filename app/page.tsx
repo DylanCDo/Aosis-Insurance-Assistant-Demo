@@ -14,8 +14,8 @@ type PageLanguage = "en" | "es" | "vi";
 
 const localizedInitialGreeting: Record<PageLanguage, string> = {
   en: "Hi, I'm the Aosis Smart Assistant! I'm here to help you find the right dental coverage. Ask me about our Cigna DHMO plans, pricing, and what's covered.",
-  es: "Hola, soy the Aosis Smart Assistant. Estoy aqui para ayudarte a encontrar la cobertura dental adecuada. Puedes preguntarme sobre planes Cigna DHMO, precios y cobertura.",
-  vi: "Xin chao, toi la the Aosis Smart Assistant. Toi se giup ban tim bao hiem nha khoa phu hop. Ban co the hoi ve goi Cigna DHMO, chi phi va quyen loi.",
+  es: "Hola, ¡soy el asistente inteligente de Aosis! Estoy aquí para ayudarle a encontrar la cobertura dental adecuada. Pregúnteme sobre nuestros planes, precios y qué cubre Cigna DHMO.",
+  vi: "Xin chào, tôi là the Aosis Smart Assistant. Tôi sẽ giúp bạn tìm bảo hiểm nha khoa phù hợp. Bạn có thể hỏi về gói Cigna DHMO, chi phí và quyền lợi.",
 };
 
 const localizedUiText: Record<
@@ -23,9 +23,6 @@ const localizedUiText: Record<
   {
     subtitle: string;
     languageLabel: string;
-    languageEnglish: string;
-    languageSpanish: string;
-    languageVietnamese: string;
     typing: string;
     placeholder: string;
     send: string;
@@ -34,9 +31,6 @@ const localizedUiText: Record<
   en: {
     subtitle: "Ask about dental plan options, coverage, pricing, or enroll now.",
     languageLabel: "Language",
-    languageEnglish: "English",
-    languageSpanish: "Spanish",
-    languageVietnamese: "Vietnamese",
     typing: "Aosis Smart Assistant is typing...",
     placeholder: "Type your message...",
     send: "Send",
@@ -45,23 +39,17 @@ const localizedUiText: Record<
     subtitle:
       "Pregunta sobre opciones de planes dentales, cobertura, precios o inscripción.",
     languageLabel: "Idioma",
-    languageEnglish: "Ingles",
-    languageSpanish: "Espanol",
-    languageVietnamese: "Vietnamita",
     typing: "Aosis Smart Assistant esta escribiendo...",
     placeholder: "Escribe tu mensaje...",
     send: "Enviar",
   },
   vi: {
     subtitle:
-      "Hoi ve cac goi bao hiem nha khoa, quyen loi, chi phi hoac dang ky ngay.",
-    languageLabel: "Ngon ngu",
-    languageEnglish: "Tieng Anh",
-    languageSpanish: "Tieng Tay Ban Nha",
-    languageVietnamese: "Tieng Viet",
-    typing: "Aosis Smart Assistant dang tra loi...",
-    placeholder: "Nhap tin nhan...",
-    send: "Gui",
+      "Hỏi về các gói bảo hiểm nha khoa, quyền lợi, chi phí hoặc đăng ký ngay.",
+    languageLabel: "Ngôn ngữ",
+    typing: "Aosis Smart Assistant đang trả lời...",
+    placeholder: "Nhập tin nhắn...",
+    send: "ửi",
   },
 };
 
@@ -196,9 +184,9 @@ export default function Home() {
                     : "border-slate-300 bg-white text-slate-700"
                 }`}
               >
-                <option value="en">{text.languageEnglish}</option>
-                <option value="es">{text.languageSpanish}</option>
-                <option value="vi">{text.languageVietnamese}</option>
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="vi">Tiếng Việt</option>
               </select>
 
               <button
