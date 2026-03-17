@@ -21,12 +21,14 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 ## System Design
 
 See [docs/system-design.md](docs/system-design.md) for architecture, runtime flow, OpenAI integration, and operational setup.
+See [docs/company-context.md](docs/company-context.md) for business context and prompt-rule configuration details.
 
 ## Transcript Logging (Optional)
 
 This app supports server-side chat transcript logging using Neon/Postgres.
 
 See [docs/chat-transcription.md](docs/chat-transcription.md) for full flow, schema details, verification SQL, and troubleshooting.
+See [docs/transcript-store.md](docs/transcript-store.md) for module-level behavior of the transcript persistence layer.
 
 1. Provision a Postgres database (for example Neon on Vercel).
 2. Ensure Postgres environment variables are available to the app runtime.
