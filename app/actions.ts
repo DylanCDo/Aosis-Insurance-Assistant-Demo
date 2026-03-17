@@ -9,7 +9,8 @@ const MODEL_NAME = "gpt-4o";
 
 export async function getAIResponse(
   input: string,
-  threadId?: string
+  threadId?: string,
+  analytics?: { userId?: string; sessionId?: string }
 ): Promise<{ content: string; threadId: string }> {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error(
@@ -36,6 +37,8 @@ export async function getAIResponse(
 
   await logTranscriptMessage({
     threadId: thread.id,
+    userId: analytics?.userId,
+    sessionId: analytics?.sessionId,
     role: "user",
     content: input,
   });
@@ -52,6 +55,8 @@ export async function getAIResponse(
     const fallback = "Sorry, I couldn't generate a response.";
     await logTranscriptMessage({
       threadId: thread.id,
+      userId: analytics?.userId,
+      sessionId: analytics?.sessionId,
       role: "error",
       content: fallback,
       model: MODEL_NAME,
@@ -84,6 +89,8 @@ export async function getAIResponse(
 
   await logTranscriptMessage({
     threadId: thread.id,
+    userId: analytics?.userId,
+    sessionId: analytics?.sessionId,
     role: "assistant",
     content: finalContent,
     model: MODEL_NAME,

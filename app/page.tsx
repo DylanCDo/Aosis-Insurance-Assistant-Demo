@@ -10,6 +10,11 @@ type ChatMessage = {
   content: string;
 };
 
+type AnalyticsIds = {
+  userId: string;
+  sessionId: string;
+};
+
 type PageLanguage = "en" | "es" | "vi";
 
 const localizedInitialGreeting: Record<PageLanguage, string> = {
@@ -68,6 +73,27 @@ export default function Home() {
   const endOfMessagesRef = useRef<HTMLDivElement | null>(null);
   const text = localizedUiText[language];
 
+  function getOrCreateAnalyticsIds(): AnalyticsIds | undefined {
+    if (typeof window === "undefined") return undefined;
+
+    const userStorageKey = "aosis-user-id";
+    const sessionStorageKey = "aosis-session-id";
+
+    let userId = window.localStorage.getItem(userStorageKey);
+    if (!userId) {
+      userId = window.crypto.randomUUID();
+      window.localStorage.setItem(userStorageKey, userId);
+    }
+
+    let sessionId = window.sessionStorage.getItem(sessionStorageKey);
+    if (!sessionId) {
+      sessionId = window.crypto.randomUUID();
+      window.sessionStorage.setItem(sessionStorageKey, sessionId);
+    }
+
+    return { userId, sessionId };
+  }
+
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
@@ -104,7 +130,8 @@ export default function Home() {
     setLoading(true);
 
     try {
-      const result = await getAIResponse(userMessage, threadId);
+      const analyticsIds = getOrCreateAnalyticsIds();
+      const result = await getAIResponse(userMessage, threadId, analyticsIds);
       setThreadId(result.threadId);
       setMessages((prev) => [
         ...prev,

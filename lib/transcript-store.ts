@@ -4,6 +4,8 @@ type TranscriptRole = "user" | "assistant" | "error";
 
 type TranscriptMessage = {
   threadId: string;
+  userId?: string;
+  sessionId?: string;
   role: TranscriptRole;
   content: string;
   model?: string;
@@ -25,14 +27,28 @@ async function ensureTranscriptSchema(): Promise<void> {
         CREATE TABLE IF NOT EXISTS conversations (
           id BIGSERIAL PRIMARY KEY,
           thread_id TEXT NOT NULL UNIQUE,
+          user_id TEXT,
+          session_id TEXT,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
+      `;
+
+      await sql`
+        ALTER TABLE conversations
+        ADD COLUMN IF NOT EXISTS user_id TEXT
+      `;
+
+      await sql`
+        ALTER TABLE conversations
+        ADD COLUMN IF NOT EXISTS session_id TEXT
       `;
 
       await sql`
         CREATE TABLE IF NOT EXISTS transcript_messages (
           id BIGSERIAL PRIMARY KEY,
           conversation_id BIGINT NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+          user_id TEXT,
+          session_id TEXT,
           role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'error')),
           content TEXT NOT NULL,
           model TEXT,
@@ -40,6 +56,16 @@ async function ensureTranscriptSchema(): Promise<void> {
           error TEXT,
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
+      `;
+
+      await sql`
+        ALTER TABLE transcript_messages
+        ADD COLUMN IF NOT EXISTS user_id TEXT
+      `;
+
+      await sql`
+        ALTER TABLE transcript_messages
+        ADD COLUMN IF NOT EXISTS session_id TEXT
       `;
 
       await sql`
@@ -51,20 +77,36 @@ async function ensureTranscriptSchema(): Promise<void> {
         CREATE INDEX IF NOT EXISTS idx_transcript_messages_created_at
           ON transcript_messages(created_at DESC)
       `;
+
+      await sql`
+        CREATE INDEX IF NOT EXISTS idx_transcript_messages_user_id
+          ON transcript_messages(user_id)
+      `;
+
+      await sql`
+        CREATE INDEX IF NOT EXISTS idx_transcript_messages_session_id
+          ON transcript_messages(session_id)
+      `;
     })();
   }
 
   await schemaInitPromise;
 }
 
-async function ensureConversation(threadId: string): Promise<number | null> {
+async function ensureConversation(
+  threadId: string,
+  userId?: string,
+  sessionId?: string
+): Promise<number | null> {
   if (!isTranscriptLoggingConfigured()) return null;
 
   const result = await sql<{ id: number }>`
-    INSERT INTO conversations (thread_id)
-    VALUES (${threadId})
+    INSERT INTO conversations (thread_id, user_id, session_id)
+    VALUES (${threadId}, ${userId ?? null}, ${sessionId ?? null})
     ON CONFLICT (thread_id)
-    DO UPDATE SET thread_id = EXCLUDED.thread_id
+    DO UPDATE SET
+      user_id = COALESCE(EXCLUDED.user_id, conversations.user_id),
+      session_id = COALESCE(EXCLUDED.session_id, conversations.session_id)
     RETURNING id
   `;
 
@@ -79,12 +121,18 @@ export async function logTranscriptMessage(
   try {
     await ensureTranscriptSchema();
 
-    const conversationId = await ensureConversation(message.threadId);
+    const conversationId = await ensureConversation(
+      message.threadId,
+      message.userId,
+      message.sessionId
+    );
     if (!conversationId) return;
 
     await sql`
       INSERT INTO transcript_messages (
         conversation_id,
+        user_id,
+        session_id,
         role,
         content,
         model,
@@ -93,6 +141,8 @@ export async function logTranscriptMessage(
       )
       VALUES (
         ${conversationId},
+        ${message.userId ?? null},
+        ${message.sessionId ?? null},
         ${message.role},
         ${message.content},
         ${message.model ?? null},
