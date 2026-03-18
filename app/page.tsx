@@ -18,9 +18,9 @@ type AnalyticsIds = {
 type PageLanguage = "en" | "es" | "vi";
 
 const localizedInitialGreeting: Record<PageLanguage, string> = {
-  en: "Hi, I'm the Aosis Smart Assistant! I'm here to help you find the right dental coverage. Ask me about our Cigna DHMO plans, pricing, and what's covered.",
-  es: "Hola, ¡soy el asistente inteligente de Aosis! Estoy aquí para ayudarle a encontrar la cobertura dental adecuada. Pregúnteme sobre nuestros planes, precios y qué cubre Cigna DHMO.",
-  vi: "Xin chào, tôi là the Aosis Smart Assistant. Tôi sẽ giúp bạn tìm bảo hiểm nha khoa phù hợp. Bạn có thể hỏi về gói Cigna DHMO, chi phí và quyền lợi.",
+  en: "Hi, I'm the AOSIS Smart Assistant! I'm here to help you find the right dental coverage. Ask me about our Cigna DHMO plans, pricing, and what's covered.",
+  es: "Hola, ¡soy el asistente inteligente de AOSIS! Estoy aquí para ayudarle a encontrar la cobertura dental adecuada. Pregúnteme sobre nuestros planes, precios y qué cubre Cigna DHMO.",
+  vi: "Xin chào, tôi là the AOSIS Smart Assistant. Tôi sẽ giúp bạn tìm bảo hiểm nha khoa phù hợp. Bạn có thể hỏi về gói Cigna DHMO, chi phí và quyền lợi.",
 };
 
 const localizedUiText: Record<
@@ -36,7 +36,7 @@ const localizedUiText: Record<
   en: {
     subtitle: "Ask about dental plan options, coverage, pricing, or enroll now.",
     languageLabel: "Language",
-    typing: "Aosis Smart Assistant is typing...",
+    typing: "AOSIS Smart Assistant is typing...",
     placeholder: "Type your message...",
     send: "Send",
   },
@@ -44,7 +44,7 @@ const localizedUiText: Record<
     subtitle:
       "Pregunta sobre opciones de planes dentales, cobertura, precios o inscripción.",
     languageLabel: "Idioma",
-    typing: "Aosis Smart Assistant esta escribiendo...",
+    typing: "AOSIS Smart Assistant esta escribiendo...",
     placeholder: "Escribe tu mensaje...",
     send: "Enviar",
   },
@@ -52,7 +52,7 @@ const localizedUiText: Record<
     subtitle:
       "Hỏi về các gói bảo hiểm nha khoa, quyền lợi, chi phí hoặc đăng ký ngay.",
     languageLabel: "Ngôn ngữ",
-    typing: "Aosis Smart Assistant đang trả lời...",
+    typing: "AOSIS Smart Assistant đang trả lời...",
     placeholder: "Nhập tin nhắn...",
     send: "ửi",
   },
@@ -186,7 +186,7 @@ export default function Home() {
               />
               <div>
                 <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
-                  Aosis Smart Assistant
+                  AOSIS Smart Assistant
                 </h1>
                 <p
                   className={`mt-1 text-sm ${
