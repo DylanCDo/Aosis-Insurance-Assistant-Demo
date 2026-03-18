@@ -227,14 +227,22 @@ export default function Home() {
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-3">
-              <Image
-                src={companyLogo}
-                alt="AOSIS logo"
-                className={`h-10 w-auto object-contain sm:h-12 ${
-                  isDark ? "invert" : ""
-                }`}
-                priority
-              />
+              <a
+                href="https://aosisolutions.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Visit AOSIS website"
+                className="inline-flex"
+              >
+                <Image
+                  src={companyLogo}
+                  alt="AOSIS logo"
+                  className={`h-10 w-auto object-contain sm:h-12 ${
+                    isDark ? "invert" : ""
+                  }`}
+                  priority
+                />
+              </a>
               <div>
                 <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
                   AOSIS Smart Assistant
