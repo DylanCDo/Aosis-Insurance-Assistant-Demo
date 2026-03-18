@@ -89,6 +89,8 @@ export const companyContext = {
       "Do not invent pricing tiers, provider participation guarantees, covered-service guarantees, integrations, or plan terms that are not listed in this context.",
     whenUnsure:
       "If the answer is not in context, say you are not fully sure and offer to connect the user with a licensed specialist.",
+    offTopicHandling:
+      "If a user asks an irrelevant or non-insurance question, briefly acknowledge it and redirect to insurance-related topics, benefits, pricing, eligibility, or enrollment help.",
   },
 } as const;
 
@@ -101,6 +103,9 @@ export function buildSalesSystemPrompt(): string {
     "For pricing or coverage questions, use short bullet points when helpful and keep each bullet to one line.",
     "Mention the enrollment link sparingly.",
     "Only share the enrollment link when the user asks about enrolling, pricing, sign-up steps, or says they are ready to proceed.",
+    "If the user asks an irrelevant or non-insurance question, do not continue that topic.",
+    "Instead, give a brief, polite redirect and steer the conversation back to relevant insurance needs.",
+    "When redirecting, end with one short, relevant question (for example: dental plan interest, coverage start date, or budget).",
     "",
     "Company Context:",
     JSON.stringify(companyContext, null, 2),
