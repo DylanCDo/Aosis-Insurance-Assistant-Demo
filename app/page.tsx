@@ -1,9 +1,60 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { getAIResponse } from "./actions";
 import companyLogo from "./assets/AOSIS-logox2.png";
+
+const urlRegex = /https?:\/\/[^\s]+/g;
+
+function renderMessageContent(content: string): ReactNode[] {
+  const parts: ReactNode[] = [];
+  let cursor = 0;
+
+  for (const match of content.matchAll(urlRegex)) {
+    if (!match[0] || match.index === undefined) continue;
+
+    const start = match.index;
+    const end = start + match[0].length;
+
+    if (start > cursor) {
+      parts.push(content.slice(cursor, start));
+    }
+
+    const rawUrl = match[0];
+    const trimmedUrl = rawUrl.replace(/[),.;!?]+$/g, "");
+    const trailingText = rawUrl.slice(trimmedUrl.length);
+    const isSafeProtocol = /^https?:\/\//i.test(trimmedUrl);
+
+    if (trimmedUrl && isSafeProtocol) {
+      parts.push(
+        <a
+          key={`link-${start}`}
+          href={trimmedUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline decoration-1 underline-offset-2 hover:opacity-80"
+        >
+          {trimmedUrl}
+        </a>
+      );
+    } else {
+      parts.push(rawUrl);
+    }
+
+    if (trailingText) {
+      parts.push(trailingText);
+    }
+
+    cursor = end;
+  }
+
+  if (cursor < content.length) {
+    parts.push(content.slice(cursor));
+  }
+
+  return parts.length > 0 ? parts : [content];
+}
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -258,7 +309,7 @@ export default function Home() {
                         : "rounded-bl-md border border-slate-200 bg-white text-slate-800"
                   }`}
                 >
-                  {message.content}
+                  {renderMessageContent(message.content)}
                 </div>
               </div>
             );
