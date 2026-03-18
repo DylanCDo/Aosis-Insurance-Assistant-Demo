@@ -5,6 +5,7 @@ This document explains how chat transcription (text turn logging) works in this 
 
 ## Scope
 - Logs text conversations between user and assistant
+- Logs anonymous analytics identifiers (user_id, session_id)
 - Logs metadata for observability (model, latency, errors)
 - Uses best-effort writes so chat UX is never blocked by database errors
 
@@ -12,7 +13,10 @@ This is not audio transcription.
 
 ## Runtime Flow
 1. A user submits a message from the UI in app/page.tsx.
-2. The server action getAIResponse in app/actions.ts receives the input.
+2. The client includes analytics IDs:
+	- userId (persistent in localStorage)
+	- sessionId (browser-session scoped in sessionStorage)
+3. The server action getAIResponse in app/actions.ts receives the input.
 3. The action creates or reuses an OpenAI thread ID.
 4. The user message is sent to OpenAI thread.
 5. The user turn is logged via logTranscriptMessage in lib/transcript-store.ts.
@@ -30,11 +34,15 @@ The schema file is still available for manual/explicit database management.
 ### conversations
 - id: BIGSERIAL primary key
 - thread_id: TEXT unique, OpenAI thread identifier
+- user_id: optional anonymous user identifier
+- session_id: optional session identifier
 - created_at: timestamp
 
 ### transcript_messages
 - id: BIGSERIAL primary key
 - conversation_id: foreign key to conversations(id)
+- user_id: optional anonymous user identifier
+- session_id: optional session identifier
 - role: user | assistant | error
 - content: message text
 - model: optional model name
@@ -72,11 +80,18 @@ Run in Neon SQL editor:
 select count(*) from conversations;
 select count(*) from transcript_messages;
 
-select c.thread_id, m.role, m.model, m.latency_ms, m.created_at
+select c.thread_id, m.user_id, m.session_id, m.role, m.model, m.latency_ms, m.created_at
 from transcript_messages m
 join conversations c on c.id = m.conversation_id
 order by m.created_at desc
 limit 25;
+
+select user_id, count(*) as message_count
+from transcript_messages
+where user_id is not null
+group by user_id
+order by message_count desc
+limit 10;
 ```
 
 ## Troubleshooting
@@ -90,7 +105,6 @@ limit 25;
 - Use retries/queueing if guaranteed delivery is needed.
 
 ## Extension Ideas
-- Add user/session IDs for per-user analytics.
 - Add an admin transcript viewer route.
 - Export transcripts to Sheets/Docs in a background job.
 - Add retention cleanup job for compliance.

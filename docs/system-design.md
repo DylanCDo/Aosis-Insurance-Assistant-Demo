@@ -16,6 +16,7 @@ Primary goals:
 - Responsibilities:
   - Render full-screen chat UI
   - Manage local state: messages, threadId, loading, dark mode
+  - Create and persist analytics IDs (userId/sessionId)
   - Submit user messages to server action
   - Display assistant responses and error text
 
@@ -33,9 +34,9 @@ Primary goals:
 - Files: lib/transcript-store.ts, db/schema.sql
 - Responsibilities:
   - Ensure transcript tables and indexes exist (auto-init on first write)
-  - Upsert conversation rows by OpenAI thread_id
+  - Upsert conversation rows by OpenAI thread_id and optional analytics IDs
   - Insert message-level transcript rows with role/content/timestamps
-  - Store optional metadata (model, latency, error)
+  - Store optional metadata (user_id, session_id, model, latency, error)
   - Operate in best-effort mode so logging failures do not break chat
 
 ### Prompt and Business Context Layer
@@ -59,7 +60,7 @@ Primary goals:
 2. UI calls getAIResponse(input, threadId) server action.
 3. Server action checks OPENAI_API_KEY and OPENAI_ASSISTANT_ID.
 4. Server action creates a new thread or reuses existing threadId.
-5. User message is appended to thread and logged to transcript storage.
+5. User message is appended to thread and logged to transcript storage with optional userId/sessionId.
 6. Assistant run is executed with:
    - assistant_id from env
    - additional_instructions from buildSalesSystemPrompt()
@@ -85,6 +86,9 @@ Control mechanism:
 Client state in app/page.tsx:
 - threadId: string | undefined
 - messages: array of { role: "user" | "assistant", content: string }
+- analytics IDs:
+  - userId (persistent across browser visits)
+  - sessionId (per browser tab/session)
 - input: string
 - loading: boolean
 - isDark: boolean
@@ -94,9 +98,9 @@ Server return contract in app/actions.ts:
 
 Database model (Neon/Postgres):
 - conversations:
-  - id, thread_id (unique), created_at
+  - id, thread_id (unique), user_id, session_id, created_at
 - transcript_messages:
-  - id, conversation_id (FK), role, content, model, latency_ms, error, created_at
+  - id, conversation_id (FK), user_id, session_id, role, content, model, latency_ms, error, created_at
 
 ## Environment Configuration
 Required:
@@ -148,7 +152,7 @@ Database (required for transcript logging):
 - Transcript logging depends on database availability but is non-blocking for chat responses.
 
 ## Extension Points
-- Add authenticated user IDs to conversations for per-user history
+- Map anonymous analytics IDs to authenticated users when auth is introduced
 - Add source citation rendering in UI instead of stripping citations
 - Add multi-assistant support for different insurance product lines
 - Add transcript viewer/admin dashboard and export workflows

@@ -29,6 +29,7 @@ This app supports server-side chat transcript logging using Neon/Postgres.
 
 See [docs/chat-transcription.md](docs/chat-transcription.md) for full flow, schema details, verification SQL, and troubleshooting.
 See [docs/transcript-store.md](docs/transcript-store.md) for module-level behavior of the transcript persistence layer.
+See [docs/database-schema.md](docs/database-schema.md) for table, column, relationship, and index definitions.
 
 1. Provision a Postgres database (for example Neon on Vercel).
 2. Ensure Postgres environment variables are available to the app runtime.

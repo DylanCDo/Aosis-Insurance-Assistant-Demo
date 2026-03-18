@@ -10,6 +10,8 @@ The transcript store module provides best-effort persistence of chat turns to Ne
 ### logTranscriptMessage(message)
 - Input shape:
   - threadId: OpenAI thread identifier
+  - userId: optional anonymous user identifier
+  - sessionId: optional session identifier
   - role: user | assistant | error
   - content: message text
   - model: optional model name
@@ -32,21 +34,27 @@ Creates required tables and indexes if missing:
 - transcript_messages
 - idx_transcript_messages_conversation_id
 - idx_transcript_messages_created_at
+- idx_transcript_messages_user_id
+- idx_transcript_messages_session_id
 
 The module memoizes schema initialization with schemaInitPromise so concurrent calls do not run duplicate initialization work.
 
-### ensureConversation(threadId)
-Upserts a conversation row using thread_id and returns the numeric conversation id.
+### ensureConversation(threadId, userId, sessionId)
+Upserts a conversation row using thread_id and stores optional analytics IDs, then returns the numeric conversation id.
 
 ## Data Model Used
 ### conversations
 - id: BIGSERIAL primary key
 - thread_id: TEXT unique
+- user_id: TEXT nullable
+- session_id: TEXT nullable
 - created_at: TIMESTAMPTZ default now
 
 ### transcript_messages
 - id: BIGSERIAL primary key
 - conversation_id: FK to conversations(id)
+- user_id: TEXT nullable
+- session_id: TEXT nullable
 - role: user | assistant | error
 - content: TEXT
 - model: TEXT nullable
