@@ -25,7 +25,9 @@ export function ChatInput({
     <form
       onSubmit={onSubmit}
       className={`border-t p-4 sm:p-5 ${
-        isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"
+        isDark
+          ? "border-slate-700 bg-slate-900"
+          : "border-blue-100 bg-white/90 backdrop-blur-sm"
       }`}
     >
       <div className="flex items-end gap-3">
@@ -44,7 +46,7 @@ export function ChatInput({
           className={`w-full resize-none rounded-2xl border px-4 py-3 text-sm outline-none transition ${
             isDark
               ? "border-slate-600 bg-slate-800 text-slate-100 placeholder:text-slate-400 focus:border-slate-500"
-              : "border-slate-300 bg-slate-50 text-slate-900 focus:border-slate-400 focus:bg-white"
+              : "border-blue-200 bg-white text-slate-900 focus:border-blue-500"
           }`}
         />
         <button
@@ -52,8 +54,8 @@ export function ChatInput({
           disabled={loading || !input.trim()}
           className={`rounded-2xl px-5 py-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${
             isDark
-              ? "bg-slate-100 text-slate-900 hover:bg-slate-300"
-              : "bg-slate-900 text-white hover:bg-slate-700"
+              ? "bg-blue-100 text-blue-950 hover:bg-blue-50"
+              : "bg-blue-700 text-white hover:bg-blue-600"
           }`}
         >
           {sendLabel}

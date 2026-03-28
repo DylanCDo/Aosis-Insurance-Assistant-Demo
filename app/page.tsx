@@ -176,12 +176,12 @@ export default function Home() {
       className={`h-screen w-screen ${
         isDark
           ? "bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 text-slate-100"
-          : "bg-gradient-to-b from-slate-100 via-slate-50 to-white text-slate-900"
+          : "bg-[radial-gradient(circle_at_top,#dbeafe_0%,#eff6ff_32%,#f8fafc_100%)] text-slate-900"
       }`}
     >
       <main
-        className={`flex h-full w-full flex-col overflow-hidden ${
-          isDark ? "bg-slate-900" : "bg-white"
+        className={`app-shell-enter flex h-full w-full flex-col overflow-hidden ${
+          isDark ? "bg-slate-900" : "bg-white/85"
         }`}
       >
         <ChatHeader

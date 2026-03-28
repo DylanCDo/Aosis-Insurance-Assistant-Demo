@@ -34,7 +34,9 @@ export function MessageList({
   return (
     <section
       className={`flex-1 space-y-4 overflow-y-auto p-4 sm:p-6 ${
-        isDark ? "bg-slate-900/70" : "bg-slate-100/70"
+        isDark
+          ? "bg-slate-900/70"
+          : "bg-gradient-to-b from-white via-blue-50/45 to-white"
       }`}
     >
       {messages.map((message) => (
@@ -59,7 +61,7 @@ export function MessageList({
             className={`rounded-2xl rounded-bl-md border px-4 py-3 text-sm ${
               isDark
                 ? "border-slate-700 bg-slate-800 text-slate-300"
-                : "border-slate-200 bg-white text-slate-500"
+                : "border-blue-100 bg-blue-50 text-blue-900"
             }`}
           >
             {text.typing}

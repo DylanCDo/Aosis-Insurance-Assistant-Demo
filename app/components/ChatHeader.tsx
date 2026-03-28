@@ -28,7 +28,7 @@ export function ChatHeader({
       className={`border-b px-5 py-4 sm:px-6 ${
         isDark
           ? "border-slate-700 bg-slate-900"
-          : "border-slate-200 bg-slate-50"
+          : "border-blue-100 bg-white/90"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -50,7 +50,11 @@ export function ChatHeader({
             />
           </a>
           <div>
-            <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+            <h1
+              className={`text-xl font-semibold tracking-tight sm:text-2xl ${
+                isDark ? "text-slate-100" : "text-blue-900"
+              }`}
+            >
               AOSIS Smart Assistant
             </h1>
             <p
@@ -74,7 +78,7 @@ export function ChatHeader({
             className={`rounded-xl border px-2 py-2 text-xs outline-none sm:text-sm ${
               isDark
                 ? "border-slate-600 bg-slate-800 text-slate-100"
-                : "border-slate-300 bg-white text-slate-700"
+                : "border-blue-200 bg-white text-slate-700 focus:border-blue-400"
             }`}
           >
             <option value="en">English</option>
@@ -90,7 +94,7 @@ export function ChatHeader({
             className={`rounded-xl border px-3 py-2 text-xs font-medium transition sm:text-sm ${
               isDark
                 ? "border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700"
-                : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+                : "border-blue-200 bg-blue-50 text-blue-900 hover:bg-blue-100"
             }`}
           >
             {text.voiceLabel}: {voiceEnabled ? text.voiceOn : text.voiceOff}
@@ -104,7 +108,7 @@ export function ChatHeader({
             className={`rounded-xl border px-3 py-2 text-xs font-medium transition sm:text-sm ${
               isDark
                 ? "border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700"
-                : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+                : "border-blue-200 bg-white text-blue-900 hover:bg-blue-50"
             }`}
           >
             <span aria-hidden="true" className="text-base leading-none">

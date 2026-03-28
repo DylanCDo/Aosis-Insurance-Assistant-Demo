@@ -31,7 +31,7 @@ function renderMessageContent(content: string): ReactNode[] {
           href={trimmedUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline decoration-1 underline-offset-2 hover:opacity-80"
+          className="font-medium text-blue-700 underline decoration-1 underline-offset-2 hover:text-blue-600"
         >
           {trimmedUrl}
         </a>
@@ -88,11 +88,11 @@ export function MessageBubble({
           className={`whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 ${
             isUser
               ? isDark
-                ? "rounded-br-md bg-slate-100 text-slate-900"
-                : "rounded-br-md bg-slate-900 text-white"
+                ? "rounded-br-md bg-blue-100 text-blue-950"
+                : "rounded-br-md bg-blue-800 text-white"
               : isDark
                 ? "rounded-bl-md border border-slate-700 bg-slate-800 text-slate-100"
-                : "rounded-bl-md border border-slate-200 bg-white text-slate-800"
+                : "rounded-bl-md border border-blue-100 bg-white text-slate-800 shadow-sm"
           }`}
         >
           {renderMessageContent(message.content)}
@@ -113,7 +113,7 @@ export function MessageBubble({
               className={`rounded-xl border px-3 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
                 isDark
                   ? "border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700"
-                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+                  : "border-blue-200 bg-blue-50 text-blue-900 hover:bg-blue-100"
               }`}
             >
               {isSpeaking ? stopLabel : speakLabel}
