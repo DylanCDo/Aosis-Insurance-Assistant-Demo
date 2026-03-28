@@ -87,5 +87,5 @@ When updating this file:
 
 ## Related Docs
 - docs/system-design.md
-- docs/chat-transcription.md
-- docs/transcript-store.md
+- docs/explanations/chat-transcription.md
+- docs/lib/transcript-store.md

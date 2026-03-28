@@ -10,6 +10,7 @@
     "setup-assistant": "node --env-file=.env.local scripts/setup-assistant.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-polly": "^3.1019.0",
     "@vercel/postgres": "^0.10.0",
     "next": "16.1.6",
     "openai": "^6.29.0",

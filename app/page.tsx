@@ -1,128 +1,44 @@
-"use client";
+﻿"use client";
 
-import Image from "next/image";
-import { FormEvent, ReactNode, useEffect, useRef, useState } from "react";
-import { getAIResponse } from "./actions";
-import companyLogo from "./assets/AOSIS-logox2.png";
-
-const urlRegex = /https?:\/\/[^\s]+/g;
-
-function renderMessageContent(content: string): ReactNode[] {
-  const parts: ReactNode[] = [];
-  let cursor = 0;
-
-  for (const match of content.matchAll(urlRegex)) {
-    if (!match[0] || match.index === undefined) continue;
-
-    const start = match.index;
-    const end = start + match[0].length;
-
-    if (start > cursor) {
-      parts.push(content.slice(cursor, start));
-    }
-
-    const rawUrl = match[0];
-    const trimmedUrl = rawUrl.replace(/[),.;!?]+$/g, "");
-    const trailingText = rawUrl.slice(trimmedUrl.length);
-    const isSafeProtocol = /^https?:\/\//i.test(trimmedUrl);
-
-    if (trimmedUrl && isSafeProtocol) {
-      parts.push(
-        <a
-          key={`link-${start}`}
-          href={trimmedUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline decoration-1 underline-offset-2 hover:opacity-80"
-        >
-          {trimmedUrl}
-        </a>
-      );
-    } else {
-      parts.push(rawUrl);
-    }
-
-    if (trailingText) {
-      parts.push(trailingText);
-    }
-
-    cursor = end;
-  }
-
-  if (cursor < content.length) {
-    parts.push(content.slice(cursor));
-  }
-
-  return parts.length > 0 ? parts : [content];
-}
-
-type ChatMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
-
-type AnalyticsIds = {
-  userId: string;
-  sessionId: string;
-};
-
-type PageLanguage = "en" | "es" | "vi";
-
-const localizedInitialGreeting: Record<PageLanguage, string> = {
-  en: "Hi, I'm the AOSIS Smart Assistant! I'm here to help you find the right dental coverage. Ask me about our Cigna DHMO plans, pricing, and what's covered.",
-  es: "Hola, ¡soy el asistente inteligente de AOSIS! Estoy aquí para ayudarle a encontrar la cobertura dental adecuada. Pregúnteme sobre nuestros planes, precios y qué cubre Cigna DHMO.",
-  vi: "Xin chào, tôi là the AOSIS Smart Assistant. Tôi sẽ giúp bạn tìm bảo hiểm nha khoa phù hợp. Bạn có thể hỏi về gói Cigna DHMO, chi phí và quyền lợi.",
-};
-
-const localizedUiText: Record<
-  PageLanguage,
-  {
-    subtitle: string;
-    languageLabel: string;
-    typing: string;
-    placeholder: string;
-    send: string;
-  }
-> = {
-  en: {
-    subtitle: "Ask about dental plan options, coverage, pricing, or enroll now.",
-    languageLabel: "Language",
-    typing: "AOSIS Smart Assistant is typing...",
-    placeholder: "Type your message...",
-    send: "Send",
-  },
-  es: {
-    subtitle:
-      "Pregunta sobre opciones de planes dentales, cobertura, precios o inscripción.",
-    languageLabel: "Idioma",
-    typing: "AOSIS Smart Assistant esta escribiendo...",
-    placeholder: "Escribe tu mensaje...",
-    send: "Enviar",
-  },
-  vi: {
-    subtitle:
-      "Hỏi về các gói bảo hiểm nha khoa, quyền lợi, chi phí hoặc đăng ký ngay.",
-    languageLabel: "Ngôn ngữ",
-    typing: "AOSIS Smart Assistant đang trả lời...",
-    placeholder: "Nhập tin nhắn...",
-    send: "ửi",
-  },
-};
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { getAIResponse, translateMessages } from "./actions";
+import { localizedInitialGreeting, localizedUiText } from "./i18n";
+import type { AnalyticsIds, ChatMessage, PageLanguage } from "./types";
+import { usePolly } from "./hooks/usePolly";
+import { ChatHeader } from "./components/ChatHeader";
+import { MessageList } from "./components/MessageList";
+import { ChatInput } from "./components/ChatInput";
 
 export default function Home() {
   const [threadId, setThreadId] = useState<string | undefined>(undefined);
   const [isDark, setIsDark] = useState(false);
   const [language, setLanguage] = useState<PageLanguage>("en");
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "assistant",
-      content: localizedInitialGreeting.en,
-    },
-  ]);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const greetingShownRef = useRef(false);
+  const prevLanguageRef = useRef<PageLanguage>(language);
+  const languageRef = useRef(language);
+  const voiceEnabledRef = useRef(voiceEnabled);
+  const messagesRef = useRef<ChatMessage[]>([]);
   const endOfMessagesRef = useRef<HTMLDivElement | null>(null);
   const text = localizedUiText[language];
+
+  const {
+    speakingId,
+    ttsLoading,
+    ttsErrorId,
+    stopPlayback,
+    clearTtsError,
+    playNotificationSound,
+    playAudio,
+  } = usePolly(language);
+
+  function makeMessage(role: ChatMessage["role"], content: string): ChatMessage {
+    return { id: window.crypto.randomUUID(), role, content };
+  }
 
   function getOrCreateAnalyticsIds(): AnalyticsIds | undefined {
     if (typeof window === "undefined") return undefined;
@@ -146,28 +62,79 @@ export default function Home() {
   }
 
   useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    languageRef.current = language;
+  }, [language]);
+
+  useEffect(() => {
+    voiceEnabledRef.current = voiceEnabled;
+  }, [voiceEnabled]);
+
+  useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
   useEffect(() => {
-    setMessages((prev) => {
-      if (prev.length === 0) return prev;
+    if (!voiceEnabled) stopPlayback();
+  }, [voiceEnabled]);
 
-      const first = prev[0];
-      if (first.role !== "assistant") return prev;
+  useEffect(() => () => stopPlayback(), []);
 
-      const isInitialGreeting = Object.values(localizedInitialGreeting).includes(
-        first.content
-      );
-      if (!isInitialGreeting) return prev;
-
-      const next = [...prev];
-      next[0] = {
-        ...first,
-        content: localizedInitialGreeting[language],
+  useEffect(() => {
+    if (greetingShownRef.current) return;
+    greetingShownRef.current = true;
+    setLoading(true);
+    const timer = setTimeout(() => {
+      const currentLanguage = languageRef.current;
+      const greeting: ChatMessage = {
+        id: "assistant-initial",
+        role: "assistant",
+        content: localizedInitialGreeting[currentLanguage],
       };
-      return next;
-    });
+      setMessages([greeting]);
+      setLoading(false);
+    }, 1200);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (prevLanguageRef.current === language) return;
+    prevLanguageRef.current = language;
+
+    // Swap the greeting immediately using the hardcoded translation
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === "assistant-initial"
+          ? { ...m, content: localizedInitialGreeting[language] }
+          : m
+      )
+    );
+
+    // Translate all other messages via OpenAI
+    const toTranslate = messagesRef.current
+      .filter((m) => m.role === "assistant" && m.id !== "assistant-initial")
+      .map((m) => ({ id: m.id, content: m.content }));
+
+    if (toTranslate.length === 0) return;
+
+    setIsTranslating(true);
+    translateMessages(toTranslate, language)
+      .then((translated) => {
+        const map = new Map(translated.map((t) => [t.id, t.content]));
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === "assistant-initial"
+              ? m
+              : { ...m, content: map.get(m.id) ?? m.content }
+          )
+        );
+      })
+      .catch(() => {})
+      .finally(() => setIsTranslating(false));
   }, [language]);
 
   async function handleSubmit(e: FormEvent) {
@@ -176,7 +143,7 @@ export default function Home() {
     const userMessage = input.trim();
     if (!userMessage || loading) return;
 
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+    setMessages((prev) => [...prev, makeMessage("user", userMessage)]);
     setInput("");
     setLoading(true);
 
@@ -184,22 +151,21 @@ export default function Home() {
       const analyticsIds = getOrCreateAnalyticsIds();
       const result = await getAIResponse(userMessage, threadId, analyticsIds);
       setThreadId(result.threadId);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: result.content || "Sorry, I couldn't generate a response.",
-        },
-      ]);
+      const reply = makeMessage(
+        "assistant",
+        result.content || "Sorry, I couldn't generate a response."
+      );
+      setMessages((prev) => [...prev, reply]);
+      playNotificationSound();
+      if (voiceEnabled) {
+        playAudio(reply);
+      }
     } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "Error: " + (err instanceof Error ? err.message : String(err)),
-        },
-      ]);
+      const reply = makeMessage(
+        "assistant",
+        "Error: " + (err instanceof Error ? err.message : String(err))
+      );
+      setMessages((prev) => [...prev, reply]);
     } finally {
       setLoading(false);
     }
@@ -218,162 +184,39 @@ export default function Home() {
           isDark ? "bg-slate-900" : "bg-white"
         }`}
       >
-        <header
-          className={`border-b px-5 py-4 sm:px-6 ${
-            isDark
-              ? "border-slate-700 bg-slate-900"
-              : "border-slate-200 bg-slate-50"
-          }`}
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <a
-                href="https://aosisolutions.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Visit AOSIS website"
-                className="inline-flex"
-              >
-                <Image
-                  src={companyLogo}
-                  alt="AOSIS logo"
-                  className={`h-10 w-auto object-contain sm:h-12 ${
-                    isDark ? "invert" : ""
-                  }`}
-                  priority
-                />
-              </a>
-              <div>
-                <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
-                  AOSIS Smart Assistant
-                </h1>
-                <p
-                  className={`mt-1 text-sm ${
-                    isDark ? "text-slate-300" : "text-slate-600"
-                  }`}
-                >
-                  {text.subtitle}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <label htmlFor="page-language" className="sr-only">
-                {text.languageLabel}
-              </label>
-              <select
-                id="page-language"
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as PageLanguage)}
-                className={`rounded-xl border px-2 py-2 text-xs outline-none sm:text-sm ${
-                  isDark
-                    ? "border-slate-600 bg-slate-800 text-slate-100"
-                    : "border-slate-300 bg-white text-slate-700"
-                }`}
-              >
-                <option value="en">English</option>
-                <option value="es">Español</option>
-                <option value="vi">Tiếng Việt</option>
-              </select>
+        <ChatHeader
+          isDark={isDark}
+          language={language}
+          voiceEnabled={voiceEnabled}
+          text={text}
+          onLanguageChange={setLanguage}
+          onVoiceToggle={() => setVoiceEnabled((prev) => !prev)}
+          onDarkToggle={() => setIsDark((prev) => !prev)}
+        />
 
-              <button
-                type="button"
-                onClick={() => setIsDark((prev) => !prev)}
-                aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-                title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-                className={`rounded-xl border px-3 py-2 text-xs font-medium transition sm:text-sm ${
-                  isDark
-                    ? "border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700"
-                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
-                }`}
-              >
-                <span aria-hidden="true" className="text-base leading-none">
-                  {isDark ? "☀" : "☾"}
-                </span>
-              </button>
-            </div>
-          </div>
-        </header>
+        <MessageList
+          messages={messages}
+          loading={loading}
+          isDark={isDark}
+          speakingId={speakingId}
+          ttsLoading={ttsLoading}
+          ttsErrorId={ttsErrorId}
+          text={text}
+          endRef={endOfMessagesRef}
+          onSpeak={(msg) => { clearTtsError(msg.id); void playAudio(msg); }}
+          onStop={stopPlayback}
+          onClearError={clearTtsError}
+        />
 
-        <section
-          className={`flex-1 space-y-4 overflow-y-auto p-4 sm:p-6 ${
-            isDark ? "bg-slate-900/70" : "bg-slate-100/70"
-          }`}
-        >
-          {messages.map((message, index) => {
-            const isUser = message.role === "user";
-            return (
-              <div
-                key={`${message.role}-${index}`}
-                className={`flex ${isUser ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 sm:max-w-[75%] ${
-                    isUser
-                      ? isDark
-                        ? "rounded-br-md bg-slate-100 text-slate-900"
-                        : "rounded-br-md bg-slate-900 text-white"
-                      : isDark
-                        ? "rounded-bl-md border border-slate-700 bg-slate-800 text-slate-100"
-                        : "rounded-bl-md border border-slate-200 bg-white text-slate-800"
-                  }`}
-                >
-                  {renderMessageContent(message.content)}
-                </div>
-              </div>
-            );
-          })}
-
-          {loading ? (
-            <div className="flex justify-start">
-              <div
-                className={`rounded-2xl rounded-bl-md border px-4 py-3 text-sm ${
-                  isDark
-                    ? "border-slate-700 bg-slate-800 text-slate-300"
-                    : "border-slate-200 bg-white text-slate-500"
-                }`}
-              >
-                {text.typing}
-              </div>
-            </div>
-          ) : null}
-
-          <div ref={endOfMessagesRef} />
-        </section>
-
-        <form
+        <ChatInput
+          input={input}
+          loading={loading || isTranslating}
+          isDark={isDark}
+          placeholder={text.placeholder}
+          sendLabel={text.send}
+          onChange={setInput}
           onSubmit={handleSubmit}
-          className={`border-t p-4 sm:p-5 ${
-            isDark
-              ? "border-slate-700 bg-slate-900"
-              : "border-slate-200 bg-white"
-          }`}
-        >
-          <div className="flex items-end gap-3">
-            <textarea
-              id="user-input"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={text.placeholder}
-              rows={2}
-              className={`w-full resize-none rounded-2xl border px-4 py-3 text-sm outline-none transition ${
-                isDark
-                  ? "border-slate-600 bg-slate-800 text-slate-100 placeholder:text-slate-400 focus:border-slate-500"
-                  : "border-slate-300 bg-slate-50 text-slate-900 focus:border-slate-400 focus:bg-white"
-              }`}
-            />
-            <button
-              type="submit"
-              disabled={loading || !input.trim()}
-              className={`rounded-2xl px-5 py-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${
-                isDark
-                  ? "bg-slate-100 text-slate-900 hover:bg-slate-300"
-                  : "bg-slate-900 text-white hover:bg-slate-700"
-              }`}
-            >
-              {text.send}
-            </button>
-          </div>
-        </form>
+        />
       </main>
     </div>
   );

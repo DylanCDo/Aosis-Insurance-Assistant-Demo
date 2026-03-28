@@ -3,6 +3,7 @@
 import OpenAI from "openai";
 import { buildSalesSystemPrompt } from "./company-context";
 import { logTranscriptMessage } from "../lib/transcript-store";
+import type { PageLanguage } from "./types";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const MODEL_NAME = "gpt-4o";
@@ -101,4 +102,43 @@ export async function getAIResponse(
     content: finalContent,
     threadId: thread.id,
   };
+}
+
+const languageNames: Record<PageLanguage, string> = {
+  en: "English",
+  es: "Spanish",
+  vi: "Vietnamese",
+};
+
+export async function translateMessages(
+  messages: { id: string; content: string }[],
+  targetLanguage: PageLanguage
+): Promise<{ id: string; content: string }[]> {
+  if (!messages.length) return messages;
+
+  const targetName = languageNames[targetLanguage];
+
+  const response = await client.chat.completions.create({
+    model: MODEL_NAME,
+    messages: [
+      {
+        role: "system",
+        content: `Translate the following JSON array of messages to ${targetName}. Each item has "id" and "content". Return a JSON object with key "messages" containing the same array with only "content" translated. Preserve formatting, URLs, and proper nouns like plan or brand names.`,
+      },
+      {
+        role: "user",
+        content: JSON.stringify(messages),
+      },
+    ],
+    response_format: { type: "json_object" },
+  });
+
+  try {
+    const parsed = JSON.parse(
+      response.choices[0].message.content ?? "{}"
+    ) as { messages?: { id: string; content: string }[] };
+    return parsed.messages ?? messages;
+  } catch {
+    return messages;
+  }
 }

@@ -1,0 +1,70 @@
+<!-- AOSIS Smart Assistant — Chat Bubble Embed -->
+<!-- Replace https://your-app.vercel.app with your actual Vercel deployment URL -->
+
+<style>
+  #aosis-chat-bubble {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+  }
+
+  #aosis-chat-bubble button {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #1e293b;
+    color: white;
+    font-size: 24px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  #aosis-chat-bubble button:hover {
+    background: #334155;
+  }
+
+  #aosis-chat-frame {
+    display: none;
+    position: fixed;
+    bottom: 90px;
+    right: 24px;
+    width: 400px;
+    height: 600px;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    z-index: 9999;
+  }
+
+  @media (max-width: 480px) {
+    #aosis-chat-frame {
+      width: calc(100vw - 48px);
+      height: 70vh;
+      bottom: 90px;
+      right: 24px;
+    }
+  }
+</style>
+
+<div id="aosis-chat-bubble">
+  <button onclick="toggleAosisChat()" title="Chat with AOSIS Assistant">💬</button>
+</div>
+
+<iframe
+  id="aosis-chat-frame"
+  src="https://your-app.vercel.app"
+  title="AOSIS Smart Assistant"
+></iframe>
+
+<script>
+  function toggleAosisChat() {
+    var frame = document.getElementById('aosis-chat-frame');
+    if (frame.style.display === 'block') {
+      frame.style.display = 'none';
+    } else {
+      frame.style.display = 'block';
+    }
+  }
+</script>
