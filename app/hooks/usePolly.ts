@@ -39,8 +39,8 @@ export function usePolly(language: PollyLanguage) {
       oscillator.connect(gain);
       gain.connect(ctx.destination);
       oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(660, ctx.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
+      oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.12);
       gain.gain.setValueAtTime(0.18, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
       oscillator.start(ctx.currentTime);
