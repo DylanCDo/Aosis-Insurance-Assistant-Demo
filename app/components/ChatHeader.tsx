@@ -57,13 +57,6 @@ export function ChatHeader({
             >
               AOSIS Smart Assistant
             </h1>
-            <p
-              className={`mt-1 text-sm ${
-                isDark ? "text-slate-300" : "text-slate-600"
-              }`}
-            >
-              {text.subtitle}
-            </p>
           </div>
         </div>
 
